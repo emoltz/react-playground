@@ -9,16 +9,18 @@
   height: 25px;
   border-radius: 25px;
   background-color: grey;
-  position: relative;
+  position: absolute;
+  left: 0px;
+  top: 350px;
   transition: background-color 0.2s;
 }
 
 .Promoted {
-  background-color: green;
+  background-color: lightgreen;
 }
 
 .Graduated {
-  background-color: grey;
+  background-color: deepskyblue;
 }
 
 .switch-handle {
@@ -34,4 +36,12 @@
 
 .Promoted .switch-handle {
   left: 26px;
+}
+
+.switch-display{    /*Not working*/
+  display: none;
+}
+
+.switch.disabled{   /*Not working*/
+  visibility: hidden;
 }
