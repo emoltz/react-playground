@@ -1,441 +1,141 @@
 import './App.css'
-// import { testFunction } from './lib/utils'
-
-// function App() {
-//
-//   return (
-//     <>
-//       <button
-//         onClick={testFunction}
-//
-//       >
-//         Click me!
-//       </button>
-//
-//     </>
-//   )
-// }
-// export default App
-
-// import React, { useEffect, useRef } from 'react';
-// import * as d3 from 'd3';
-// import * as dagreD3 from 'dagre-d3';
-//
-// const DagreD3Graph: React.FC = () => {
-//   const svgRef = useRef<SVGSVGElement | null>(null);
-//
-//   useEffect(() => {
-//     if (!svgRef.current) return;
-//
-//     const svg = d3.select(svgRef.current);
-//     const inner = svg.append('g');
-//
-//     // Create the input graph
-//     const g = new dagreD3.graphlib.Graph({ multigraph: true }).setGraph({});
-//
-//     // Add cluster nodes to the graph
-//     g.setNode('cluster_0', { label: 'Cluster 0' });
-//     g.setNode('cluster_1', { label: 'Cluster 1' });
-//     g.setNode('cluster_2', { label: 'Cluster 2' });
-//     g.setNode('cluster_3', { label: 'Cluster 3' });
-//
-//     // Add nodes to the graph
-//     g.setNode('a', { label: 'a' });
-//     g.setNode('b', { label: 'b' });
-//     g.setNode('c', { label: 'c' });
-//     g.setNode('d', { label: 'd' });
-//
-//     // Set parent relationships
-//     g.setParent('a', 'cluster_0');
-//     g.setParent('b', 'cluster_1');
-//     g.setParent('c', 'cluster_2');
-//     g.setParent('d', 'cluster_3');
-//
-//     // Add edges to the graph
-//     g.setEdge('a', 'b', { label: 'a -> b' });
-//     g.setEdge('b', 'c', { label: 'b -> c' });
-//     g.setEdge('c', 'd', { label: 'c -> d' });
-//     g.setEdge('d', 'a', { label: 'd -> a' });
-//
-//     // Create the renderer
-//     const render = new dagreD3.render();
-//
-//     // Run the renderer. This is what draws the final graph.
-//     render(inner, g);
-//
-//     // Center the graph
-//     const initialScale = 0.75;
-//     svg.call(d3.zoom().on('zoom', ({ transform }) => inner.attr('transform', transform)))
-//       .call(d3.zoom().transform, d3.zoomIdentity.translate(20, 20).scale(initialScale));
-//   }, []);
-//
-//   return (
-//     <svg ref={svgRef} width="800" height="600"></svg>
-//   );
-// };
-// function App() {
-//
-//   return (
-//     <>
-//       <DagreD3Graph>
-//
-//       </DagreD3Graph>
-//
-//     </>
-//   )
-// }
-
-// export default App;
-
-
-import React from 'react';
 import Graphviz from 'graphviz-react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const App: React.FC = () => {
-  const dot =
-    //   `digraph {
-    //   node [shape=rect];
-    //   subgraph cluster1{
-    //     label=<Nonsense Title>;
-    //     cluster=true;
-    //     color=blue;
-    //     node [
-    //       shape=ellipse,
-    //       style=filled,
-    //       color=blue,
-    //       fontcolor=white
-    //     ];
-    //     a2 [label="0 | [&bull; S, $]\\n[S &rarr; &bull; a S b, $]\\n[S &rarr; &bull;, $]"]
-    //     a1 -> a2 -> a3;
-    //     a1 -> a3;
-    //   }
-    //   subgraph cluster2{
-    //     label = <Also Nonsense>;
-    //     cluster=true;
-    //     bgcolor=white;
-    //     node [
-    //       shape=ellipse,
-    //       style=filled,
-    //       color=yellow,
-    //       fontcolor=black
-    //     ];
-    //     b1 -> b2 -> b3;
-    //     b2 -> b1;
-    //     b2 [shape=diamond];
-    //     b3->b3;
-    //     b3->a3 [label = <Edge Label>,style=dashed];
-    //   }
-    //   start:r-> a1;
-    //   start:e -> b1;
-    //   a3 -> end;
-    //   b3 -> end;
-    //   a1->end [style=dotted];
-    //   start [style=filled, color=black, fontcolor=white];
-    //   end [color=red];
-    // }`;
 
-    `digraph V {
-    node [shape=rect];
+  const [valueToDisplay, setValueToDisplay] = useState<string>('');
+  const [filepath, setFilepath] = useState<string>('');
 
-    subgraph cluster_DenominatorQuantity1 {
-        cluster=true;
-        label="DenominatorQuantity1";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "nan";
-        "enter_amount_of_change_with_variable-1";
-        "represent_part_or_total_in_proportion_with_variable-1";
-        "enter_numerator_of_percent_with_variable-1";
-        "enter_given_total_in_proportion-1";
-        "enter_numerator_of_given_percent_in_proportion-1";
-    }
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('/flaskapi/get-results');
+        console.log(response.data);
+        setValueToDisplay(response.data.message);
+        setFilepath(response.data.filepath);
 
-    subgraph cluster_NumeratorQuantity1 {
-        cluster=true;
-        label="NumeratorQuantity1";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "nan";
-        "enter_amount_of_change_with_variable-1";
-        "enter_given_part_in_proportion-1";
-        "enter_given_amount_of_change_in_proportion-1";
-        "represent_part_or_total_in_proportion_with_variable-1";
-        "enter_given_total_in_proportion-1";
-        "enter_given_percent_change_in_proportion-1";
-    }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
 
-    subgraph cluster_NumeratorQuantity2 {
-        cluster=true;
-        label="NumeratorQuantity2";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "nan";
-        "enter_amount_of_change_with_variable-1";
-        "enter_given_part_in_proportion-1";
-        "enter_numerator_of_given_percent_in_proportion-1";
-        "enter_given_amount_of_change_in_proportion-1";
-        "enter_numerator_of_percent_with_variable-1";
-        "enter_given_percent_change_in_proportion-1";
-        "enter_numerator_of_percent_change_with_variable-1";
-    }
+    fetchData();
+  }, []); // Empty dependency array means this runs once after the initial render
 
-    subgraph cluster_FinalAnswer {
-        cluster=true;
-        label="FinalAnswer";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "enter_label_of_final_answer-1";
-        "calculate_final_amount_in_context-1";
-        "nan";
-        "calculate_part-percent-1";
-        "calculate_percent_change_in_context-1";
-        "calculate_percent-1";
-        "calculate_total-percent-1";
-        "enter_numerator_of_given_percent_in_proportion-1";
-    }
-
-    subgraph cluster_OptionalTask_1 {
-        cluster=true;
-        label="OptionalTask_1";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "enter_label_of_final_answer-1";
-        "nan";
-        "calculate_part-percent-1";
-        "calculate_percent_change_in_context-1";
-        "calculate_total-percent-1";
-        "enter_given_percent_change_in_proportion-1";
-    }
-
-    subgraph cluster_OptionalTask_2 {
-        cluster=true;
-        label="OptionalTask_2";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "represent_part_or_total_in_proportion_with_variable-1";
-        "nan";
-    }
-
-    subgraph "cluster_FirstRow1:2" {
-        cluster=true;
-        label="FirstRow1:2";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "calculate_part-percent-1";
-        "nan";
-        "enter_numerator_of_given_percent_in_proportion-1";
-        "calculate_final_amount_in_context-1";
-    }
-
-    subgraph cluster_DenominatorFactor {
-        cluster=true;
-        label="DenominatorFactor";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "calculate_total-percent-1";
-        "enter_label_of_final_answer-1";
-        "nan";
-        "enter_amount_of_change_with_variable-1";
-    }
-
-    subgraph cluster_NumeratorFactor {
-        cluster=true;
-        label="NumeratorFactor";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "calculate_part-percent-1";
-        "enter_label_of_final_answer-1";
-        "nan";
-    }
-
-    subgraph cluster_EquationAnswer {
-        cluster=true;
-        label="EquationAnswer";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "calculate_percent_change_in_context-1";
-        "nan";
-        "calculate_final_amount_in_context-1";
-        "calculate_total-percent-1";
-    }
-
-    subgraph "cluster_FirstRow1:1" {
-        cluster=true;
-        label="FirstRow1:1";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "enter_label_of_final_answer-1";
-        "nan";
-        "calculate_final_amount_in_context-1";
-    }
-
-    subgraph "cluster_FirstRow2:1" {
-        cluster=true;
-        label="FirstRow2:1";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "enter_given_total_in_proportion-1";
-        "nan";
-    }
-
-    subgraph "cluster_FirstRow2:2" {
-        cluster=true;
-        label="FirstRow2:2";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "nan";
-        "enter_numerator_of_percent_with_variable-1";
-    }
-
-    subgraph cluster_SecondRow {
-        cluster=true;
-        label="SecondRow";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "calculate_part-percent-1";
-        "nan";
-        "calculate_final_amount_in_context-1";
-        "calculate_total-percent-1";
-    }
-
-    subgraph cluster_ThirdRow {
-        cluster=true;
-        label="ThirdRow";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "enter_label_of_final_answer-1";
-        "nan";
-        "calculate_final_amount_in_context-1";
-        "calculate_percent_change_in_context-1";
-        "calculate_percent-1";
-    }
-
-    subgraph cluster_PercentChange {
-        cluster=true;
-        label="PercentChange";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "nan";
-        "enter_given_percent_change_in_proportion-1";
-        "enter_amount_of_change_with_variable-1";
-    }
-
-    subgraph cluster_FinalAnswerDirection {
-        cluster=true;
-        label="FinalAnswerDirection";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "enter_label_of_final_answer-1";
-        "nan";
-        "calculate_percent_change_in_context-1";
-    }
-
-    subgraph cluster_DenominatorLabel1 {
-        cluster=true;
-        label="DenominatorLabel1";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "calculate_part-percent-1";
-        "represent_part_or_total_in_proportion_with_variable-1";
-        "nan";
-        "enter_numerator_of_given_percent_in_proportion-1";
-    }
-
-    subgraph cluster_NumeratorLabel1 {
-        cluster=true;
-        label="NumeratorLabel1";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "enter_given_total_in_proportion-1";
-        "represent_part_or_total_in_proportion_with_variable-1";
-        "nan";
-    }
-
-    subgraph cluster_FinalAnswerLabel {
-        cluster=true;
-        label="FinalAnswerLabel";
-        node [
-            style=outline,
-            color=black,
-            fontcolor=black
-        ];
-        "enter_label_of_final_answer-1";
-        "nan";
-        "calculate_percent-1";
-    }
-    
-      start:r -> "match_linear_term_expression_with_description";
-      start:e -> "match_slope_expression_with_description";
-      "match_dep_expression_with_description" -> end;
-      "match_indep_expression_with_description" -> end;
-      "match_linear_term_expression_with_description" -> end [style=dotted];
-      start [style=filled, color=black, fontcolor=white];
-      end [color=red];
-    }`;
+  const dot = valueToDisplay
 
   return (
-    <div style={{ textAlign: 'center' }}>
-      <h1>Graphviz in React with TypeScript Sample</h1>
-      <Graphviz dot={dot} options={{ height: 400, width: 600 }} />
-    </div>
+      <div>
+        <h1>Graphviz in React with TypeScript</h1>
+          <h2>{filepath}</h2>
+        <div style={{textAlign: 'center'}}>
+          {valueToDisplay && <Graphviz dot={dot} options={{height: 650, width: 600}}/>}
+        </div>
+      </div>
   );
 };
 
 export default App;
+
+//  const dot =
+//      `digraph G {
+//     "PercentChange" [rank=1, style=filled, fillcolor="#ffffff"];
+//     "NumeratorQuantity2" [rank=2, style=filled, fillcolor="#f6fafc"];
+//     "NumeratorQuantity1" [rank=3, style=filled, fillcolor="#eef5f9"];
+//     "DenominatorQuantity1" [rank=4, style=filled, fillcolor="#e6f0f7"];
+//     "FinalAnswer" [rank=5, style=filled, fillcolor="#ddebf4"];
+//     "FinalAnswerDirection" [rank=6, style=filled, fillcolor="#d5e6f2"];
+//     "OptionalTask_1" [rank=7, style=filled, fillcolor="#cde1ef"];
+//     "OptionalTask_2" [rank=8, style=filled, fillcolor="#c4dced"];
+//     "FirstRow2:1" [rank=9, style=filled, fillcolor="#bcd7ea"];
+//     "DenominatorFactor" [rank=10, style=filled, fillcolor="#b4d3e8"];
+//     "NumeratorFactor" [rank=11, style=filled, fillcolor="#accee5"];
+//     "EquationAnswer" [rank=12, style=filled, fillcolor="#a3c9e3"];
+//     "FirstRow1:1" [rank=13, style=filled, fillcolor="#9bc4e0"];
+//     "FirstRow1:2" [rank=14, style=filled, fillcolor="#93bfde"];
+//     "FirstRow2:2" [rank=15, style=filled, fillcolor="#8abadb"];
+//     "SecondRow" [rank=16, style=filled, fillcolor="#82b5d9"];
+//     "ThirdRow" [rank=17, style=filled, fillcolor="#7ab0d6"];
+//     "nan" [rank=18, style=filled, fillcolor="#72acd4"];
+//     "ThirdRow" -> "FinalAnswer" [penwidth=5.749445676274944];
+//     "FinalAnswer" -> "FinalAnswerDirection" [penwidth=8.573170731707318];
+//     "FinalAnswerDirection" -> "OptionalTask_1" [penwidth=5.759423503325943];
+//     "OptionalTask_1" -> "DenominatorFactor" [penwidth=6.437915742793792];
+//     "DenominatorFactor" -> "NumeratorFactor" [penwidth=9.241685144124169];
+//     "NumeratorFactor" -> "EquationAnswer" [penwidth=9.19179600886918];
+//     "EquationAnswer" -> "nan" [penwidth=5.150776053215077];
+//     "PercentChange" -> "NumeratorQuantity2" [penwidth=9.920177383592018];
+//     "NumeratorQuantity2" -> "NumeratorQuantity1" [penwidth=9.580931263858094];
+//     "NumeratorQuantity1" -> "DenominatorQuantity1" [penwidth=10.0];
+//     "DenominatorQuantity1" -> "OptionalTask_1" [penwidth=3.4445676274944566];
+//     "DenominatorFactor" -> "DenominatorFactor" [penwidth=4.542128603104213];
+//     "OptionalTask_2" -> "FirstRow1:1" [penwidth=3.334811529933481];
+//     "FirstRow1:1" -> "FirstRow1:2" [penwidth=7.695121951219512];
+//     "FirstRow1:2" -> "FirstRow1:2" [penwidth=1.8780487804878048];
+//     "FirstRow1:2" -> "FirstRow2:1" [penwidth=2.237250554323725];
+//     "FirstRow2:1" -> "FirstRow2:2" [penwidth=4.801552106430155];
+//     "FirstRow2:2" -> "SecondRow" [penwidth=5.629711751662971];
+//     "SecondRow" -> "ThirdRow" [penwidth=9.720620842572062];
+//     "FinalAnswerDirection" -> "DenominatorFactor" [penwidth=1.9279379157427938];
+//     "DenominatorQuantity1" -> "FinalAnswer" [penwidth=2.4168514412416853];
+//     "FinalAnswer" -> "FinalAnswer" [penwidth=3.883592017738359];
+//     "NumeratorQuantity2" -> "DenominatorQuantity1" [penwidth=2.0776053215077606];
+//     "DenominatorQuantity1" -> "NumeratorQuantity1" [penwidth=2.566518847006652];
+//     "EquationAnswer" -> "OptionalTask_2" [penwidth=1.6585365853658536];
+//     "FirstRow1:2" -> "FirstRow1:1" [penwidth=3.7937915742793793];
+//     "FirstRow1:1" -> "FirstRow1:1" [penwidth=2.0875831485587586];
+//     "FirstRow1:1" -> "FirstRow2:1" [penwidth=1.828159645232816];
+//     "FirstRow2:2" -> "FirstRow2:2" [penwidth=1.5687361419068737];
+//     "FinalAnswerDirection" -> "nan" [penwidth=1.5886917960088693];
+//     "PercentChange" -> "PercentChange" [penwidth=4.941241685144124];
+//     "PercentChange" -> "DenominatorQuantity1" [penwidth=1.5787139689578713];
+//     "NumeratorQuantity1" -> "NumeratorQuantity2" [penwidth=1.6784922394678494];
+//     "OptionalTask_2" -> "FirstRow2:1" [penwidth=5.998891352549889];
+//     "FirstRow2:2" -> "FirstRow1:1" [penwidth=2.0875831485587586];
+//     "FirstRow1:2" -> "SecondRow" [penwidth=2.8159645232815964];
+//     "NumeratorQuantity1" -> "OptionalTask_2" [penwidth=1.5886917960088693];
+//     "FirstRow1:2" -> "FirstRow2:2" [penwidth=5.270509977827051];
+//     "FirstRow2:2" -> "FirstRow2:1" [penwidth=3.254988913525499];
+//     "FirstRow2:1" -> "SecondRow" [penwidth=2.6463414634146343];
+//     "OptionalTask_1" -> "OptionalTask_2" [penwidth=3.484478935698448];
+//     "FirstRow2:1" -> "DenominatorFactor" [penwidth=2.8658536585365852];
+//     "EquationAnswer" -> "FirstRow1:1" [penwidth=3.1751662971175167];
+//     "ThirdRow" -> "nan" [penwidth=4.941241685144124];
+//     "DenominatorQuantity1" -> "OptionalTask_2" [penwidth=4.5022172949002215];
+//     "PercentChange" -> "NumeratorQuantity1" [penwidth=1.8481152993348116];
+//     "NumeratorQuantity1" -> "NumeratorQuantity1" [penwidth=3.254988913525499];
+//     "EquationAnswer" -> "EquationAnswer" [penwidth=3.1651884700665187];
+//     "EquationAnswer" -> "FinalAnswer" [penwidth=2.5066518847006654];
+//     "FinalAnswer" -> "OptionalTask_2" [penwidth=1.6485587583148558];
+//     "FirstRow2:1" -> "FirstRow1:1" [penwidth=2.6164079822616406];
+//     "FirstRow2:2" -> "FirstRow1:2" [penwidth=2.4966740576496673];
+//     "SecondRow" -> "nan" [penwidth=1.6186252771618626];
+//     "FinalAnswerDirection" -> "OptionalTask_2" [penwidth=2.556541019955654];
+//     "DenominatorQuantity1" -> "DenominatorQuantity1" [penwidth=1.9778270509977827];
+//     "SecondRow" -> "SecondRow" [penwidth=2.0376940133037693];
+//     "NumeratorQuantity2" -> "NumeratorQuantity2" [penwidth=4.0432372505543235];
+//     "DenominatorQuantity1" -> "NumeratorQuantity2" [penwidth=2.0476718403547673];
+//     "FinalAnswerDirection" -> "FinalAnswer" [penwidth=2.4567627494456765];
+//     "FinalAnswer" -> "OptionalTask_1" [penwidth=2.3869179600886916];
+//     "OptionalTask_1" -> "EquationAnswer" [penwidth=1.6485587583148558];
+//     "ThirdRow" -> "ThirdRow" [penwidth=4.053215077605321];
+//     "ThirdRow" -> "FinalAnswerDirection" [penwidth=1.7184035476718402];
+//     "OptionalTask_2" -> "FirstRow2:2" [penwidth=1.558758314855876];
+//     "FirstRow2:1" -> "FirstRow1:2" [penwidth=1.6485587583148558];
+//     "FirstRow1:1" -> "SecondRow" [penwidth=2.466740576496674];
+//     "FinalAnswerDirection" -> "FinalAnswerDirection" [penwidth=2.317073170731707];
+//     "OptionalTask_2" -> "FirstRow1:2" [penwidth=1.9977827050997783];
+//     "FirstRow1:1" -> "FirstRow2:2" [penwidth=2.1075388026607538];
+//     "DenominatorFactor" -> "EquationAnswer" [penwidth=2.327050997782705];
+//     "EquationAnswer" -> "NumeratorFactor" [penwidth=1.7184035476718402];
+//     "DenominatorQuantity1" -> "FinalAnswerDirection" [penwidth=1.5687361419068737];
+//     "OptionalTask_1" -> "NumeratorFactor" [penwidth=1.7982261640798227];
+//     "FirstRow2:2" -> "ThirdRow" [penwidth=1.7682926829268293];
+//     "NumeratorFactor" -> "DenominatorFactor" [penwidth=2.117516629711752];
+//     "NumeratorFactor" -> "NumeratorFactor" [penwidth=1.5388026607538803];
+// }
+// `
+
+
