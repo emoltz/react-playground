@@ -39,7 +39,7 @@ def create_string(step_clustering_dict: dict):
         # step_clustering_dict[cluster] = set(step_clustering_dict[cluster])
         # color = colorClusters[cluster]
         if not pd.isna(cluster):
-            s = (f'\n\n\tsubgraph cluster_{cluster} {{\n'
+            s = (f'\n\n\tsubgraph "cluster_{cluster}" {{\n'
                  f'\t\tcluster=true;\n'
                  f'\t\tlabel="{cluster}";\n'
                  # f'\t\tcolor={color};\n'
@@ -64,11 +64,12 @@ def create_string(step_clustering_dict: dict):
       "match_linear_term_expression_with_description" -> end [style=dotted];
       start [style=filled, color=black, fontcolor=white];
       end [color=red];
-    }'''
+    };'''
+    print(digraphString)
     return digraphString
 
 if __name__ == '__main__':
-    filepath = '../../sampleDatasets/7x_tutor_transactions_deidentified_ratio_proportion_change4_INPUT_OMITTED.csv'
+    filepath = '../../sampleDatasets/problemDatasets/ratio_proportion_change4b-cms-062.csv'
     df = pd.read_csv(filepath, na_values='na')
     df = step_kc_column(df)
     index_dict = get_index_dict(df)
