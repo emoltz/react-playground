@@ -1,80 +1,59 @@
-import './App.css'
+// import './App.css'
+// import Graphviz from 'graphviz-react';
+// import React, { useState, useEffect } from 'react';
+// import axios from 'axios';
+// import DropZone from './components/DropZone';
+// import { GlobalDataType } from './lib/types/global_data';
+
+// Last working
+import './App.css';
 import Graphviz from 'graphviz-react';
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import Switch from './lib/switch';
+import React, { useState } from 'react';
+import axios, {AxiosResponse} from 'axios';
+import DropZone from './components/DropZone';
 
 const App: React.FC = () => {
-
   const [data, setData] = useState<string>('');
-  const [filepath, setFilepath] = useState<string>('');
-  const [isOn, setIsOn] = useState(false);
-  const [isSwitchEnabled, setIsSwitchEnabled] = useState(false);
-  let [filter, setFilter] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
+  // const [answer, setAnswer] = useState<string>('');
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('/flaskapi/get-results');
-        console.log(response.data);
+  const handleAfterDrop = async (file: File) => {
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response: AxiosResponse = await axios.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // Ensure to check for successful response
+      if (response.status === 200) {
         setData(response.data.message);
-        setFilepath(response.data.filepath);
-      } catch (error) {
-        console.error('Error fetching data:', error);
+        console.log(data)
+        // const answer: AxiosResponse = await axios.get('/flaskapi/get-results');
+        // console.log(answer.data);
+        // setAnswer(answer.data.message);
+      } else {
+        console.error('Error from server:', response);
       }
-    };
-
-    fetchData();
-  }, []); // Empty dependency array means this runs once after the initial render
-
-  useEffect(() => {
-      const value = isOn ? "PROMOTED" : "GRADUATED";
-      setFilter(value);
-      // console.log(filter)
-
-  }, [isOn]);
-
-  const handleToggle = () => {
-    if (isSwitchEnabled){
-      setIsOn(!isOn);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    } finally {
+      setLoading(false);
     }
   };
-
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsSwitchEnabled(event.target.checked);
-  };
-
-  const getValueBasedOnSwitch = () => {
-    if (isSwitchEnabled) {
-      console.log("Filter: " + filter)
-      return isOn ?  "PROMOTED":"GRADUATED" ; // I had to switch these to get it to not be
-      // the opposite on the switch and console. Not sure why??
-      // And then all of the sudden it switch back?????
-    }
-    else {
-      // const noFilter = null
-      filter = null
-      console.log("Filter: " + filter)
-      return filter //HOW DO I SET FILTER TO null???
-    }
-  };
-
-  const dot = data
 
   return (
-    <div className="App">
+    <div>
       <h1>Graphviz in React with TypeScript</h1>
-      <h2>{filepath}</h2>
-      <div style={{textAlign: 'center'}}>
-        {data && <Graphviz dot={dot} options={{height: 600, width: 600}}/>}
+      <DropZone afterDrop={handleAfterDrop} onLoadingChange={setLoading} />
+      {loading && <p>Loading...</p>}
+      <div style={{ textAlign: 'center' }}>
+        {data && <Graphviz dot={response.message} options={{ height: 600, width: 600 }} />}
       </div>
-      <label>
-        <input type="checkbox" checked={isSwitchEnabled} onChange={handleCheckboxChange} />
-        Filter by Section Completion Status?
-      </label>
-      <Switch isOn={isOn} handleToggle={handleToggle} filter={getValueBasedOnSwitch()} isDisabled={!isSwitchEnabled}/>
-      <br/>
-      <p>{getValueBasedOnSwitch()}</p>
     </div>
   );
 };
