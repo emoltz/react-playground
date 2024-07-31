@@ -1,13 +1,38 @@
+import './App.css'
+import Graphviz from 'graphviz-react';
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import Switch from './lib/switch';
 
 const App: React.FC = () => {
+
+  const [data, setData] = useState<string>('');
+  const [filepath, setFilepath] = useState<string>('');
   const [isOn, setIsOn] = useState(false);
   const [isSwitchEnabled, setIsSwitchEnabled] = useState(false);
   let [filter, setFilter] = useState("");
-  // let filter:string|null = useState("")
-  // let [filter: string|null, setFilter] = useState("");
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('/flaskapi/get-results');
+        console.log(response.data);
+        setData(response.data.message);
+        setFilepath(response.data.filepath);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []); // Empty dependency array means this runs once after the initial render
+
+  useEffect(() => {
+      const value = isOn ? "PROMOTED" : "GRADUATED";
+      setFilter(value);
+      // console.log(filter)
+
+  }, [isOn]);
 
   const handleToggle = () => {
     if (isSwitchEnabled){
@@ -18,13 +43,6 @@ const App: React.FC = () => {
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setIsSwitchEnabled(event.target.checked);
   };
-
-  useEffect(() => {
-      const value = isOn ? "PROMOTED" : "GRADUATED";
-      setFilter(value);
-      // console.log(filter)
-
-  }, [isOn]);
 
   const getValueBasedOnSwitch = () => {
     if (isSwitchEnabled) {
@@ -39,20 +57,21 @@ const App: React.FC = () => {
       console.log("Filter: " + filter)
       return filter //HOW DO I SET FILTER TO null???
     }
-    };
+  };
 
-  // This is definitely not the ideal way to do it because if I wanted to create another switch,
-    // I would have to recreate the above functions... unless I use if (!Switch). No, it's always true
-    // as a function...
+  const dot = data
 
   return (
     <div className="App">
+      <h1>Graphviz in React with TypeScript</h1>
+      <h2>{filepath}</h2>
+      <div style={{textAlign: 'center'}}>
+        {data && <Graphviz dot={dot} options={{height: 600, width: 600}}/>}
+      </div>
       <label>
         <input type="checkbox" checked={isSwitchEnabled} onChange={handleCheckboxChange} />
         Filter by Section Completion Status?
       </label>
-      {/*<h1>Custom Switch Component</h1>*/}
-      {/*<filterSwitch isOn={isOn} handleToggle={handleToggle} filter={getValueBasedOnSwitch()}/>*/}
       <Switch isOn={isOn} handleToggle={handleToggle} filter={getValueBasedOnSwitch()} isDisabled={!isSwitchEnabled}/>
       <br/>
       <p>{getValueBasedOnSwitch()}</p>
