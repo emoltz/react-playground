@@ -21,7 +21,7 @@ const App: React.FC = () => {
     setLoading(true);
     const formData = new FormData();
     formData.append('file', file);
-
+    console.log(formData)
     try {
       const response: AxiosResponse = await axios.post('/upload', formData, {
         headers: {
@@ -32,7 +32,6 @@ const App: React.FC = () => {
       // Ensure to check for successful response
       if (response.status === 200) {
         setData(response.data.message);
-        console.log(data)
         // const answer: AxiosResponse = await axios.get('/flaskapi/get-results');
         // console.log(answer.data);
         // setAnswer(answer.data.message);
@@ -52,7 +51,7 @@ const App: React.FC = () => {
       <DropZone afterDrop={handleAfterDrop} onLoadingChange={setLoading} />
       {loading && <p>Loading...</p>}
       <div style={{ textAlign: 'center' }}>
-        {data && <Graphviz dot={response.message} options={{ height: 600, width: 600 }} />}
+        {data && <Graphviz dot={data} options={{ height: 600, width: 600 }} />}
       </div>
     </div>
   );

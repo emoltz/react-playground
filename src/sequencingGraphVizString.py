@@ -347,12 +347,13 @@ def upload_file():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     file = request.files['file']
-
+    print(file)
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     if file:
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(filepath)
+        print(filepath)
         data_sorted = load_and_sort_data(filepath)
         step_sequences = create_step_sequences(data_sorted)
         outcome_sequences = create_outcome_sequences(data_sorted)
