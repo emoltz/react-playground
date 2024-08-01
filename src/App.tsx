@@ -92,7 +92,7 @@ const App: React.FC = () => {
             <DropZone afterDrop={afterDrop} onLoadingChange={setLoading}/>
             {loading && <p>Loading...</p>}
             <div style={{textAlign: 'center'}}>
-                {data && <Graphviz dot={data} options={{height: 600, width: 600}}/>}
+                {graphData && <Graphviz dot={graphData} options={{height: 600, width: 600}}/>}
             </div>
         </div>
     );
