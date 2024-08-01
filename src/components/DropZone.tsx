@@ -159,20 +159,20 @@
 //     );
 // }
 
-import React, {useCallback, useState} from 'react';
+import {useCallback} from 'react';
 import { useDropzone } from 'react-dropzone';
 import toast from 'react-hot-toast';
-import { GlobalDataType } from '../lib/types';
-import {parseData} from "../lib/utils.ts";
-import Graphviz from "graphviz-react";
+// import { GlobalDataType } from '../lib/types';
+// import {parseData} from "../lib/utils.ts";
+// import Graphviz from "graphviz-react";
 
 interface DropZoneProps {
-    afterDrop: (data: GlobalDataType[]) => void;
+    afterDrop: (data: string) => void;
     onLoadingChange: (loading: boolean) => void;
 }
 
 export default function DropZone({ afterDrop, onLoadingChange }: DropZoneProps) {
-    const [data, setData] = useState<string>('');
+    // const [data, setData] = useState<string>('');
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         onLoadingChange(true);
@@ -193,8 +193,10 @@ export default function DropZone({ afterDrop, onLoadingChange }: DropZoneProps) 
             })
             .then(data => {
                 console.log('Upload successful:', data);
-                setData(data)
+                // setData(data)
                 toast.success('File uploaded successfully');
+                // TODO: set the afterDrop function to run here
+                afterDrop(data)
 
                 // Assuming `data.message` contains the DOT string
                 // const array = parseData(data.message, '\n\t\t');
