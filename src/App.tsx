@@ -56,7 +56,7 @@ const App: React.FC = () => {
 
         _();
 
-    }, [data, graphData])
+    }, [data])
 
     // const handleAfterDrop = async (file: File) => {
     //     setLoading(true);
