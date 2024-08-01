@@ -2,6 +2,8 @@ import pandas as pd
 from collections import Counter, defaultdict
 import numpy as np
 from flask import Flask, request, jsonify
+import matplotlib.pyplot as plt
+from scipy.interpolate import interp2d
 
 app = Flask(__name__)
 
@@ -73,7 +75,15 @@ def get_most_common_sequence(sequence_counts):
     step_sequences_counts = Counter()
     for (step_sequence, _), count in sequence_counts.items():
         step_sequences_counts[step_sequence] += count
-    most_common_sequence = step_sequences_counts.most_common(1)[0][0]
+    most_common_sequences = step_sequences_counts.most_common(30)#[0][0]
+    print(most_common_sequences)
+    # i = 0
+    # most_common_sequence = most_common_sequences[i][0]
+    most_common_sequence = max(most_common_sequences, key=lambda x: len(x[0])) #most_common_sequences[i][0]
+    print(most_common_sequence)
+    # while len(most_common_sequence) <= 1:
+    #     i += 1
+    #     most_common_sequence = most_common_sequences[i][0]
     return most_common_sequence
 
 
@@ -84,16 +94,40 @@ def interpolate_color(start_color, end_color, t):
     interpolated_rgb = [int(start + (end - start) * t) for start, end in zip(start_rgb, end_rgb)]
     return f'#{interpolated_rgb[0]:02x}{interpolated_rgb[1]:02x}{interpolated_rgb[2]:02x}'
 
-
 def calculate_color(step_rank, total_steps):
     # Define the gradient colors from white to #72acd4
     start_color = '#ffffff'  # White
     end_color = '#72acd4'  # Light Blue
-
-    # Calculate the interpolation factor
-    t = (step_rank - 1) / (total_steps - 1)
+    t = (step_rank - 1) / (total_steps - 1) if total_steps > 1 else 0
 
     return interpolate_color(start_color, end_color, t)
+
+
+def create_gradient_image():
+    # Define the corner colors
+    colors = np.array([
+        [1, 0, 0],  # Red
+        [0, 1, 0],  # Green
+        [0, 0, 1],  # Blue
+        [1, 1, 0]  # Yellow
+    ])
+
+    # Reshape to (2, 2, 3)
+    C = colors.reshape((2, 2, 3))
+
+    # Number of pixels
+    n = 700
+    img = np.zeros((n, n, 3))
+
+    for i in range(3):
+        interp_func = interp2d([0, 1], [0, 1], C[:, :, i], kind='linear')
+        img[:, :, i] = interp_func(np.linspace(0, 1, n), np.linspace(0, 1, n))
+
+    # Save the gradient image
+    gradient_image_path = 'gradient.png'
+    plt.imsave(gradient_image_path, img)
+
+    return gradient_image_path
 
 
 def calculate_edge_colors(outcomes):
@@ -103,7 +137,7 @@ def calculate_edge_colors(outcomes):
         'OK': '#00ff00',  # Green
         'INITIAL_HINT': '#0000ff',  # Blue
         'HINT_LEVEL_CHANGE': '#0000ff',  # Blue
-        'JIT': '#ff8000',  # Orange
+        'JIT': '#ffff00',  # yellow # Orange
         'FREEBIE_JIT': '#ff8000'  # Orange
     }
 
@@ -125,13 +159,21 @@ def calculate_edge_colors(outcomes):
 
 
 def generate_dot_string(normalized_thicknesses, most_common_sequence, ratio_edges,
-                        edge_outcome_counts, edge_counts, total_node_edges):
+                        edge_outcome_counts, edge_counts, total_node_edges):#, gradient_im_path):
     dot_string = 'digraph G {\n'
-    total_steps = len(most_common_sequence)
-    print(most_common_sequence)
+    dot_string += '    graph [layout=dot];\n'
+    # dot_string += '    node [shape=ellipse, style=filled];\n'
+
+    # Add the gradient image as a separate node
+    # dot_string += (f'  imgnode [shape=plaintext, image="gradient.png",'
+    #                f' labelloc="b", label="", image_scaling="TRUE"];')
+
+    total_steps = len(most_common_sequence[0])
+    # print(most_common_sequence)
     # Create rank assignments and gradient color for nodes
-    for rank, step in enumerate(most_common_sequence):
+    for rank, step in enumerate(most_common_sequence[0]):
         color = calculate_color(rank + 1, total_steps)
+        print(f'Step: {step}, Rank: {rank}, Color: {color}')  # Debug print
         dot_string += f'    "{step}" [rank={rank + 1}, style=filled, fillcolor="{color}"];\n'
 
     # Add edges with normalized thickness and color
@@ -143,7 +185,7 @@ def generate_dot_string(normalized_thicknesses, most_common_sequence, ratio_edge
         outcomes_str = '\n\t\t '.join([f"{outcome}: {count}" for outcome, count in outcomes.items()])
         tooltip = (f"{current_step} to {next_step}\n"
                    f"- Edge Count: \n\t\t {edge_count}\n"
-                   f"- Total Count for {current_step}: \n\t\t{total_count}\n"
+                   f"- Total visits to {current_step}: \n\t\t{total_count}\n"
                    f"- Ratio: \n\t\t{(ratio_edges[(current_step, next_step)]) * 100:.2f}% of students at {current_step} go to {next_step}\n"
                    f"- Outcomes: \n\t\t {outcomes_str}")
 
@@ -155,7 +197,9 @@ def generate_dot_string(normalized_thicknesses, most_common_sequence, ratio_edge
 
 
 @app.route('/get-results', methods=['GET'])
-def get_results(filepath='../../sampleDatasets/problemDatasets/ratio_proportion_mix4a-cms-042.csv'):
+def get_results(filepath='../../sampleDatasets/7x_tutor_transactions_deidentified_ratio_proportion_change4_INPUT_OMITTED.csv'):
+    # filepath='../../sampleDatasets/problemDatasets/ratio_proportion_mix4a-cms-042.csv'
+
     data_sorted = load_and_sort_data(filepath)
     step_sequences = create_step_sequences(data_sorted)
     outcome_sequences = create_outcome_sequences(data_sorted)
@@ -164,7 +208,10 @@ def get_results(filepath='../../sampleDatasets/problemDatasets/ratio_proportion_
     normalized_thicknesses = normalize_thicknesses(ratio_edges, 1.85)
 
     most_common_sequence = get_most_common_sequence(sequence_counts)
-    dot_string = generate_dot_string(normalized_thicknesses, most_common_sequence, ratio_edges, edge_outcome_counts, edge_counts, total_node_edges)    # print(dot_string)
+    # gradient_image_path = create_gradient_image()
+
+    dot_string = generate_dot_string(normalized_thicknesses, most_common_sequence, ratio_edges,
+                                     edge_outcome_counts, edge_counts, total_node_edges)#, 'gradient.png')    # print(dot_string)
     return jsonify({'message': dot_string, 'filepath': filepath})
 
 
