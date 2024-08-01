@@ -75,13 +75,15 @@ def get_most_common_sequence(sequence_counts):
     step_sequences_counts = Counter()
     for (step_sequence, _), count in sequence_counts.items():
         step_sequences_counts[step_sequence] += count
-    most_common_sequences = step_sequences_counts.most_common(40)#[0][0]
-    i = 0
-    most_common_sequence = most_common_sequences[i][0]
+    most_common_sequences = step_sequences_counts.most_common(30)#[0][0]
+    print(most_common_sequences)
+    # i = 0
+    # most_common_sequence = most_common_sequences[i][0]
+    most_common_sequence = max(most_common_sequences, key=lambda x: len(x[0])) #most_common_sequences[i][0]
     print(most_common_sequence)
-    while len(most_common_sequence) <= 1:
-        i += 1
-        most_common_sequence = most_common_sequences[i][0]
+    # while len(most_common_sequence) <= 1:
+    #     i += 1
+    #     most_common_sequence = most_common_sequences[i][0]
     return most_common_sequence
 
 
@@ -92,12 +94,11 @@ def interpolate_color(start_color, end_color, t):
     interpolated_rgb = [int(start + (end - start) * t) for start, end in zip(start_rgb, end_rgb)]
     return f'#{interpolated_rgb[0]:02x}{interpolated_rgb[1]:02x}{interpolated_rgb[2]:02x}'
 
-
 def calculate_color(step_rank, total_steps):
     # Define the gradient colors from white to #72acd4
     start_color = '#ffffff'  # White
     end_color = '#72acd4'  # Light Blue
-    t = (step_rank - 1) / (total_steps - 1)
+    t = (step_rank - 1) / (total_steps - 1) if total_steps > 1 else 0
 
     return interpolate_color(start_color, end_color, t)
 
@@ -158,7 +159,7 @@ def calculate_edge_colors(outcomes):
 
 
 def generate_dot_string(normalized_thicknesses, most_common_sequence, ratio_edges,
-                        edge_outcome_counts, edge_counts, total_node_edges, gradient_im_path):
+                        edge_outcome_counts, edge_counts, total_node_edges):#, gradient_im_path):
     dot_string = 'digraph G {\n'
     dot_string += '    graph [layout=dot];\n'
     # dot_string += '    node [shape=ellipse, style=filled];\n'
@@ -167,11 +168,12 @@ def generate_dot_string(normalized_thicknesses, most_common_sequence, ratio_edge
     # dot_string += (f'  imgnode [shape=plaintext, image="gradient.png",'
     #                f' labelloc="b", label="", image_scaling="TRUE"];')
 
-    total_steps = len(most_common_sequence)
+    total_steps = len(most_common_sequence[0])
     # print(most_common_sequence)
     # Create rank assignments and gradient color for nodes
-    for rank, step in enumerate(most_common_sequence):
+    for rank, step in enumerate(most_common_sequence[0]):
         color = calculate_color(rank + 1, total_steps)
+        print(f'Step: {step}, Rank: {rank}, Color: {color}')  # Debug print
         dot_string += f'    "{step}" [rank={rank + 1}, style=filled, fillcolor="{color}"];\n'
 
     # Add edges with normalized thickness and color
@@ -203,13 +205,13 @@ def get_results(filepath='../../sampleDatasets/7x_tutor_transactions_deidentifie
     outcome_sequences = create_outcome_sequences(data_sorted)
     sequence_counts = count_sequences(step_sequences, outcome_sequences)
     edge_counts, total_node_edges, ratio_edges, edge_outcome_counts = count_edges(sequence_counts)
-    normalized_thicknesses = normalize_thicknesses(ratio_edges, 1.5)
+    normalized_thicknesses = normalize_thicknesses(ratio_edges, 1.85)
 
     most_common_sequence = get_most_common_sequence(sequence_counts)
-    gradient_image_path = create_gradient_image()
+    # gradient_image_path = create_gradient_image()
 
     dot_string = generate_dot_string(normalized_thicknesses, most_common_sequence, ratio_edges,
-                                     edge_outcome_counts, edge_counts, total_node_edges, 'gradient.png')    # print(dot_string)
+                                     edge_outcome_counts, edge_counts, total_node_edges)#, 'gradient.png')    # print(dot_string)
     return jsonify({'message': dot_string, 'filepath': filepath})
 
 
