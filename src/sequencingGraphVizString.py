@@ -343,17 +343,22 @@ def generate_dot_string(normalized_thicknesses, most_common_sequence, ratio_edge
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    print("/upload works!")
 
     if 'file' not in request.files:
+        # TODO: here is the issue... no file coming through
+        print("No file part")
         return jsonify({'error': 'No file part'}), 400
     file = request.files['file']
-    print(file)
+
+    print("File: ", file)
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     if file:
+        print("Processing file...")
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(filepath)
-        print(filepath)
+        print("Filepath: ", filepath)
         data_sorted = load_and_sort_data(filepath)
         step_sequences = create_step_sequences(data_sorted)
         outcome_sequences = create_outcome_sequences(data_sorted)

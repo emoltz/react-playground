@@ -31,7 +31,7 @@ const App: React.FC = () => {
                 const formData = new FormData();
                 formData.append('file', data);
                 try {
-                    const response: AxiosResponse = await axios.post('/upload', formData, {
+                    const response: AxiosResponse = await axios.post('flaskapi/upload', formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                         },
