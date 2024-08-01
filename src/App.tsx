@@ -13,44 +13,46 @@ import axios, {AxiosResponse} from 'axios';
 import DropZone from './components/DropZone';
 
 const App: React.FC = () => {
-    const [data, setData] = useState<string>('');
+    const [data, setData] = useState<string | null>(null);
     const [graphData, setGraphData] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
-    // const [answer, setAnswer] = useState<string>('');
-
 
     const afterDrop = (data: string) => {
+        console.log("after drop running")
         setData(data);
     }
 
     useEffect(() => {
         // when data is changed, then send to the backend
-        setLoading(true);
         const _ = async (): Promise<void> => {
-            const formData = new FormData();
-            formData.append('file', data);
-            try {
-                const response: AxiosResponse = await axios.post('/upload', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
+            if (data) {
+                console.log("running _...")
+                setLoading(true);
+                const formData = new FormData();
+                formData.append('file', data);
+                try {
+                    const response: AxiosResponse = await axios.post('/upload', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    });
 
-                // Ensure to check for successful response
-                if (response.status === 200) {
-                    setGraphData(response.data.message);
-                    console.log("Graph data: ", graphData)
-                    console.log("Data from response: ", response.data.message)
-                    // const answer: AxiosResponse = await axios.get('/flaskapi/get-results');
-                    // console.log(answer.data);
-                    // setAnswer(answer.data.message);
-                } else {
-                    console.error('Error from server:', response);
+                    // Ensure to check for successful response
+                    if (response.status === 200) {
+                        setGraphData(response.data.message);
+                        console.log("Graph data: ", graphData)
+                        console.log("Data from response: ", response.data.message)
+                        // const answer: AxiosResponse = await axios.get('/flaskapi/get-results');
+                        // console.log(answer.data);
+                        // setAnswer(answer.data.message);
+                    } else {
+                        console.error('Error from server:', response);
+                    }
+                } catch (error) {
+                    console.error('Error uploading file:', error);
+                } finally {
+                    setLoading(false);
                 }
-            } catch (error) {
-                console.error('Error uploading file:', error);
-            } finally {
-                setLoading(false);
             }
         }
 

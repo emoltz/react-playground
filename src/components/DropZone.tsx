@@ -175,6 +175,7 @@ export default function DropZone({ afterDrop, onLoadingChange }: DropZoneProps) 
     // const [data, setData] = useState<string>('');
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
+        console.log('Files dropped:', acceptedFiles);
         onLoadingChange(true);
 
         acceptedFiles.forEach((file: File) => {
