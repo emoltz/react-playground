@@ -167,7 +167,7 @@ import toast from 'react-hot-toast';
 // import Graphviz from "graphviz-react";
 
 interface DropZoneProps {
-    afterDrop: (data: string) => void;
+    afterDrop: (data: File) => string;
     onLoadingChange: (loading: boolean) => void;
 }
 
