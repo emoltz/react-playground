@@ -24,41 +24,39 @@ const App: React.FC = () => {
 
     useEffect(() => {
         // when data is changed, then send to the backend
-        const upload = async (): Promise<any> => {
+        const upload = async (): Promise<void> => {
             if (data) {
-                console.log(data)
+                console.log('data: ', data['message'])
                 console.log("running upload")
                 setLoading(true);
                 const formData = new FormData();
                 console.log(formData)
-                // setGraphData(data)
-                formData.append('data', data);
-                console.log(formData.get('data'))
+                setGraphData(data['message'])
+                formData.append('data', data['message']);
+                // console.log(formData.get('data'))
 
                 // console.log(JSON.stringify(formData))
 
                 try {
-                    // const response: AxiosResponse = await axios.post('flaskapi/upload', formData, {
-                    //     headers: {
-                    //         'Content-Type': 'multipart/form-data',
-                    //     },
-                    // });
-                    const response = await fetch('flaskapi/upload', {
-                        method: 'POST',
-                        body: formData,
+                    const response: AxiosResponse = await axios.post('flaskapi/upload', formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                         },
                     });
+                    // const response = await fetch('flaskapi/upload', {
+                    //     method: 'POST',
+                    //     body: formData,
+                    //     headers: {
+                    //         'Content-Type': 'multipart/form-data',
+                    //     },
+                    // })
                     console.log(response)
                     // Ensure to check for successful response
                     if (response.status === 200) {
                         setGraphData(response.data.message);
                         console.log("Graph data: ", graphData)
                         console.log("Data from response: ", response.data)
-                        // const answer: AxiosResponse = await axios.get('/flaskapi/get-results');
-                        // console.log(answer.data);
-                        // setAnswer(answer.data.message);
+
                     } else {
                         console.error('Error from server:', response);
                     }

@@ -181,7 +181,7 @@ export default function DropZone({ afterDrop, onLoadingChange }: DropZoneProps) 
         acceptedFiles.forEach((file: File) => {
             const formData = new FormData();
             formData.append('file', file);
-
+            console.log('FormData:', formData)
             fetch('/flaskapi/upload', {
                 method: 'POST',
                 body: formData
