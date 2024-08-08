@@ -17,10 +17,10 @@ export const loadAndSortData = (csvData: string): CSVRow[] => {
     // Step 2: Transform data to replace NaN values
     const transformedData = parsedData.map(row => {
         return {
-            'Session Id': row['Session Id'] || 'Done Button',
-            'Time': row['Time'] || 'Done Button',
-            'Step Name': row['Step Name'] || 'Done Button',
-            'Outcome': row['Outcome'] || 'Done Button'
+            'Session Id': row['Session Id'] || 'DoneButton',
+            'Time': row['Time'] || 'DoneButton',
+            'Step Name': row['Step Name'] || 'DoneButton',
+            'Outcome': row['Outcome'] || 'DoneButton'
         };
     });
 
@@ -40,14 +40,17 @@ export const createStepSequences = (sortedData: CSVRow[]): { [key: string]: stri
         if (!acc[sessionId]) {
             acc[sessionId] = [];
         }
-        acc[sessionId].push(row['Step Name']);
+        const stepName = row['Step Name'];
+        if (!acc[sessionId].includes(stepName)) {
+            acc[sessionId].push(stepName);
+        }
         return acc;
     }, {} as { [key: string]: string[] });
 };
 
 // Function to create outcome sequences
 export const createOutcomeSequences = (sortedData: CSVRow[]): { [key: string]: string[] } => {
-    console.log(sortedData)
+    // console.log(sortedData)
     return sortedData.reduce((acc, row) => {
         const sessionId = row['Session Id'];
         if (!acc[sessionId]) {
@@ -96,32 +99,12 @@ export const countEdges = (
 
     Object.keys(edgeCounts).forEach((edge) => {
         const [start] = edge.split('->');
-        ratioEdges[edge] = edgeCounts[edge] / (totalNodeEdges[start] || 1);
+        ratioEdges[edge] = edgeCounts[edge] / (totalNodeEdges[start] || 0);
     });
-    console.log("edgeOutcomeCounts: ", edgeOutcomeCounts, "\nratioEdges: ", ratioEdges )
+    // console.log("edgeOutcomeCounts: ", edgeOutcomeCounts, "\nratioEdges: ", ratioEdges )
     return { edgeCounts, totalNodeEdges, ratioEdges, edgeOutcomeCounts };
 };
 
-// Function to normalize thicknesses
-// export function normalizeThicknesses(
-//     ratioEdges: { [key: string]: number },
-//     maxThickness: number,
-//     threshold: number
-// ): { [key: string]: number } {
-//     const normalized: { [key: string]: number } = {};
-//     const maxRatio = Math.max(...Object.values(ratioEdges), 1); // Avoid division by zero
-//
-//     Object.keys(ratioEdges).forEach((edge) => {
-//         const ratio = ratioEdges[edge];
-//         if (ratio >= threshold) {
-//             normalized[edge] = (ratio / maxRatio) * maxThickness;
-//         } else {
-//             normalized[edge] = 0; // Or some minimum value if you prefer
-//         }
-//     });
-//
-//     return normalized;
-// }
 
 /**
  * Normalize edge thicknesses with a threshold.
@@ -133,115 +116,112 @@ export const countEdges = (
  */
 export function normalizeThicknesses(
     ratioEdges: { [key: string]: number },
-    maxThickness: number,
-    threshold: number,
-    minThickness: number = 0.1 // Small minimum value to avoid zero penwidth
+    maxThickness: number
 ): { [key: string]: number } {
     const normalized: { [key: string]: number } = {};
     const maxRatio = Math.max(...Object.values(ratioEdges), 1); // Avoid division by zero
 
-    // Debugging: Log the maximum ratio
-    console.log(`Max Ratio: ${maxRatio}`);
-
     Object.keys(ratioEdges).forEach((edge) => {
         const ratio = ratioEdges[edge];
 
-        // Debugging: Log each ratio and threshold comparison
-        console.log(`Edge: ${edge}, Ratio: ${ratio}, Threshold: ${threshold}`);
 
-        if (ratio >= threshold) {
-            normalized[edge] = (ratio / maxRatio) * maxThickness;
-        } else {
-            normalized[edge] = minThickness; // Use a small minimum value
-        }
+        normalized[edge] = (ratio / maxRatio) * maxThickness;
     });
-
-    // Debugging: Log the resulting normalized values
-    console.log(`Normalized Thicknesses:`, normalized);
 
     return normalized;
 }
 
 function calculateColor(rank: number, totalSteps: number): string {
-    // Example: gradient from white to blue
+    // Calculate the ratio between 0 and 1
     const ratio = rank / totalSteps;
-    const blueValue = Math.round(ratio * 255);
-    return `#${blueValue.toString(16).padStart(2, '0')}bcd4`;
+
+    const white = { r: 255, g: 255, b: 255 }; // White color
+    const lightBlue = { r: 173, g: 216, b: 230 }; // Light Blue color
+
+    // Interpolate between white and light blue
+    const r = Math.round(white.r * (1 - ratio) + lightBlue.r * ratio);
+    const g = Math.round(white.g * (1 - ratio) + lightBlue.g * ratio);
+    const b = Math.round(white.b * (1 - ratio) + lightBlue.b * ratio);
+
+    // Convert RGB to hexadecimal
+    const toHex = (value: number) => value.toString(16).padStart(2, '0');
+    const color = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+
+
+    // console.log("Color: ", r, g, b, toHex(r), toHex(g), toHex(b), color);
+
+    return color;
 }
 
 function calculateEdgeColors(outcomes: { [outcome: string]: number }): string {
-    // Example: basic color logic
+    const colorMap: { [key: string]: string } = {
+        'ERROR': '#ff0000',  // Red
+        'OK': '#00ff00',     // Green
+        'INITIAL_HINT': '#0000ff', // Blue
+        'HINT_LEVEL_CHANGE': '#0000ff', // Blue
+        'JIT': '#ffff00',    // Yellow
+        'FREEBIE_JIT': '#ffff00' // Yellow
+    };
+
     if (Object.keys(outcomes).length === 0) {
-        return "gray";
+        return '#00000000'; // Transparent black
     }
-    const maxOutcome = Object.keys(outcomes).reduce((a, b) => (outcomes[a] > outcomes[b] ? a : b));
-    return maxOutcome === "OK" ? "green" : "red";
+
+    const totalCount = Object.values(outcomes).reduce((sum, count) => sum + count, 0);
+    let weightedR = 0, weightedG = 0, weightedB = 0;
+
+    Object.entries(outcomes).forEach(([outcome, count]) => {
+        const color = colorMap[outcome] || '#000000'; // Default to black if outcome is not found
+        const [r, g, b] = [1, 3, 5].map(i => parseInt(color.slice(i, i + 2), 16)); // Extract RGB values
+        const weight = count / totalCount;
+        weightedR += r * weight;
+        weightedG += g * weight;
+        weightedB += b * weight;
+    });
+
+    // Convert RGB values to hex and add alpha transparency
+    return `#${Math.round(weightedR).toString(16).padStart(2, '0')}${Math.round(weightedG).toString(16).padStart(2, '0')}${Math.round(weightedB).toString(16).padStart(2, '0')}90`;
 }
-// Function to generate the DOT string
-// export const generateDotString = (
-//     normalizedThicknesses: { [key: string]: number },
-//     mostCommonSequence: string[],
-//     ratioEdges: { [key: string]: number },
-//     edgeOutcomeCounts: { [key: string]: { [outcome: string]: number } },
-//     edgeCounts: { [key: string]: number },
-//     totalNodeEdges: { [key: string]: number }
-// ): string => {
-//     let dotString = 'digraph G {\n';
-//
-//     // Generate nodes
-//     mostCommonSequence.forEach((node, index) => {
-//         const color = `#${(Math.round((index / mostCommonSequence.length) * 255)).toString(16).padStart(2, '0')}bcd4`;
-//         dotString += `  "${node}" [style=filled, fillcolor="${color}"];\n`;
-//     });
-//
-//     // Generate edges
-//     Object.keys(normalizedThicknesses).forEach((edge) => {
-//         const thickness = normalizedThicknesses[edge].toFixed(2);
-//         const [start, end] = edge.split('->');
-//         const outcomes = edgeOutcomeCounts[edge];
-//         const mostCommonOutcome = Object.keys(outcomes).reduce((a, b) => (outcomes[a] > outcomes[b] ? a : b));
-//         dotString += `  "${start}" -> "${end}" [penwidth=${thickness}, label="${mostCommonOutcome}"];\n`;
-//     });
-//
-//     dotString += '}';
-//     return dotString;
+
 export function generateDotString(
     normalizedThicknesses: { [key: string]: number },
     mostCommonSequence: string[],
     ratioEdges: { [key: string]: number },
     edgeOutcomeCounts: EdgeOutcomeCounts,
     edgeCounts: EdgeCounts,
-    totalNodeEdges: TotalNodeEdges
+    totalNodeEdges: TotalNodeEdges,
+    threshold: number
 ): string {
     let dotString = 'digraph G {\n';
     const totalSteps = mostCommonSequence.length;
-
+    // console.log(mostCommonSequence, totalSteps)
     for (let rank = 0; rank < totalSteps; rank++) {
         const step = mostCommonSequence[rank];
         const color = calculateColor(rank + 1, totalSteps);
-        dotString += `    "${step}" [rank=${rank + 1}, style=filled, fillcolor="${color}"];\n`;
+        dotString += `    "${step}" [rank=${rank + 1}, style=filled, fillcolor="${color}, tooltip=${color}"];\n`;
     }
 
     for (const edge of Object.keys(normalizedThicknesses)) {
-        const [currentStep, nextStep] = edge.split('->') as EdgeKey;
-        const thickness = normalizedThicknesses[edge];
-        const outcomes = edgeOutcomeCounts[edge] || {};
-        const edgeCount = edgeCounts[edge] || 0;
-        const totalCount = totalNodeEdges[currentStep] || 0;
-        const color = calculateEdgeColors(outcomes);
-        const outcomesStr = Object.entries(outcomes)
-            .map(([outcome, count]) => `${outcome}: ${count}`)
-            .join('\n\t\t ');
+         if (normalizedThicknesses[edge] >= threshold){
+            const [currentStep, nextStep] = edge.split('->') as EdgeKey;
+            const thickness = normalizedThicknesses[edge];
+            const outcomes = edgeOutcomeCounts[edge] || {};
+            const edgeCount = edgeCounts[edge] || 0;
+            const totalCount = totalNodeEdges[currentStep] || 0;
+            const color = calculateEdgeColors(outcomes);
+            const outcomesStr = Object.entries(outcomes)
+                .map(([outcome, count]) => `${outcome}: ${count}`)
+                .join('\n\t\t ');
 
-        const tooltip = `${currentStep} to ${nextStep}\n`
-            + `- Edge Count: \n\t\t ${edgeCount}\n`
-            + `- Total Count for ${currentStep}: \n\t\t${totalCount}\n`
-            + `- Ratio: \n\t\t${(ratioEdges[edge] || 0) * 100}% of students at ${currentStep} go to ${nextStep}\n`
-            + `- Outcomes: \n\t\t ${outcomesStr}\n`
-            + `- Color Codes: \n\t\t Hex: ${color}\n\t\t RGB: ${[parseInt(color.substring(1, 3), 16), parseInt(color.substring(3, 5), 16), parseInt(color.substring(5, 7), 16)]}`;
+            const tooltip = `${currentStep} to ${nextStep}\n`
+                + `- Edge Count: \n\t\t ${edgeCount}\n`
+                + `- Total Count for ${currentStep}: \n\t\t${totalCount}\n`
+                + `- Ratio: \n\t\t${(ratioEdges[edge] || 0) * 100}% of students at ${currentStep} go to ${nextStep}\n`
+                + `- Outcomes: \n\t\t ${outcomesStr}\n`
+                + `- Color Codes: \n\t\t Hex: ${color}\n\t\t RGB: ${[parseInt(color.substring(1, 3), 16), parseInt(color.substring(3, 5), 16), parseInt(color.substring(5, 7), 16)]}`;
 
-        dotString += `    "${currentStep}" -> "${nextStep}" [penwidth=${thickness}, color="${color}", tooltip="${tooltip}"];\n`;
-    }
+            dotString += `    "${currentStep}" -> "${nextStep}" [penwidth=${thickness}, color="${color}", tooltip="${tooltip}"];\n`;
+        }}
 
     dotString += '}';
     return dotString;

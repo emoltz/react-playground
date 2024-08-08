@@ -17,6 +17,7 @@ const DropZone: React.FC<DropZoneProps> = ({ onDataProcessed }) => {
                 const csvData = event.target.result;
                 const sortedData = loadAndSortData(csvData);
                 const stepSequences = createStepSequences(sortedData);
+                // console.log(stepSequences)
                 const outcomeSequences = createOutcomeSequences(sortedData);
                 onDataProcessed(stepSequences, outcomeSequences);
             }

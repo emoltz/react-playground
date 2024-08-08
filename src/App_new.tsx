@@ -22,7 +22,7 @@ const App: React.FC = () => {
             ratioEdges,
             edgeOutcomeCounts,
             edgeCounts,
-            totalNodeEdges
+            totalNodeEdges, 1
         );
         console.log(dotStr)
         setDotString(dotStr);
@@ -34,7 +34,7 @@ const App: React.FC = () => {
             <DropZone onDataProcessed={handleDataProcessed}/>
             <ErrorBoundary>
             <div className={"container"}>
-                {dotString && <Graphviz dot={dotString} options={{ useWorker: false, height: 600, width: 800}}/>}
+                {dotString && <Graphviz dot={dotString} options={{ useWorker: false, height: 600, width: 600}}/>}
             </div>
             </ErrorBoundary>
         </div>
