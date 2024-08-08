@@ -40,11 +40,6 @@
 /*.read-the-docs {*/
 /*  color: #888;*/
 /*}*/
-.clusters rect {
-  fill: #00ffd0;
-  stroke: #999;
-  stroke-width: 1.5px;
-}
 
 text {
   font-weight: 300;
@@ -52,13 +47,8 @@ text {
   font-size: 10px;
 }
 
-.node rect {
-  stroke: #999;
-  fill: #fff;
-  stroke-width: 3px;
-}
-
-.edgePath path {
-  stroke: #333;
-  stroke-width: 1.5px;
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
