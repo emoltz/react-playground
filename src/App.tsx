@@ -1,11 +1,3 @@
-// import './App.css'
-// import Graphviz from 'graphviz-react';
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import DropZone from './components/DropZone';
-// import { GlobalDataType } from './lib/types/global_data';
-
-// Last working
 import './App.css';
 import Graphviz from 'graphviz-react';
 import React, {useEffect, useState} from 'react';

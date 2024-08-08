@@ -86,12 +86,12 @@ def calculate_color(step_rank, total_steps):
 
 def calculate_edge_colors(outcomes):
     color_map = {
-        'ERROR': '#ff0000',
-        'OK': '#00ff00',
-        'INITIAL_HINT': '#0000ff',
-        'HINT_LEVEL_CHANGE': '#0000ff',
-        'JIT': '#ff8000',
-        'FREEBIE_JIT': '#ff8000'
+        'ERROR': '#ff0000',  #Red
+        'OK': '#00ff00',  #Green
+        'INITIAL_HINT': '#0000ff',  #Blue
+        'HINT_LEVEL_CHANGE': '#0000ff',  #Blue
+        'JIT': '#ffff00',  # Yellow (Alternative: '#ffa500' for Orange or '#a200ff' for Purple)
+        'FREEBIE_JIT': '#ffff00'  # Yellow (Alternative: '#ffa500' for Orange or '#a200ff' for Purple)
     }
 
     if not outcomes:
@@ -130,7 +130,8 @@ def generate_dot_string(normalized_thicknesses, most_common_sequence, ratio_edge
                    f"- Edge Count: \n\t\t {edge_count}\n"
                    f"- Total Count for {current_step}: \n\t\t{total_count}\n"
                    f"- Ratio: \n\t\t{(ratio_edges[(current_step, next_step)]) * 100:.2f}% of students at {current_step} go to {next_step}\n"
-                   f"- Outcomes: \n\t\t {outcomes_str}")
+                   f"- Outcomes: \n\t\t {outcomes_str}\n"
+                   f"- Color Codes: \n\t\t Hex: {color}\n\t\t RGB: {tuple(int(color.removeprefix('#')[i:i+2], 16) for i in (0, 2, 4))}")
 
         dot_string += (f'    "{current_step}" -> "{next_step}" [penwidth={thickness},'
                        f' color="{color}", tooltip="{tooltip}"];\n')
