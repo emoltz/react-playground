@@ -5,6 +5,8 @@ interface CSVRow {
     'Time': string;
     'Step Name': string;
     'Outcome': string;
+    'CF (Workspace Progress Status)': string;
+
 }
 
 // Function to load and sort data
@@ -17,10 +19,11 @@ export const loadAndSortData = (csvData: string): CSVRow[] => {
     // Step 2: Transform data to replace NaN values
     const transformedData = parsedData.map(row => {
         return {
-            'Session Id': row['Session Id'] || 'DoneButton',
-            'Time': row['Time'] || 'DoneButton',
+            'Session Id': row['Session Id'],
+            'Time': row['Time'],
             'Step Name': row['Step Name'] || 'DoneButton',
-            'Outcome': row['Outcome'] || 'DoneButton'
+            'Outcome': row['Outcome'],
+            'CF (Workspace Progress Status)': row['CF (Workspace Progress Status)'],
         };
     });
 
@@ -136,7 +139,7 @@ function calculateColor(rank: number, totalSteps: number): string {
     const ratio = rank / totalSteps;
 
     const white = { r: 255, g: 255, b: 255 }; // White color
-    const lightBlue = { r: 173, g: 216, b: 230 }; // Light Blue color
+    const lightBlue = { r: 0, g: 166, b: 255 }; // Light Blue color
 
     // Interpolate between white and light blue
     const r = Math.round(white.r * (1 - ratio) + lightBlue.r * ratio);
