@@ -18,7 +18,7 @@ const App: React.FC = () => {
 useEffect(() => {
     if (!csvData) return; // Skip if no CSV data is available
 
-    let sortedData = loadAndSortData(csvData);
+    const sortedData = loadAndSortData(csvData);
 
     // Generate the unfiltered graph
     const stepSequences = createStepSequences(sortedData);
@@ -44,6 +44,9 @@ useEffect(() => {
 
     // Generate the filtered graph if a filter is set
     if (filter) {
+        //TODO: Add qualifier to show difference between two graphs (maybe border color to show if
+        // something increased or decreased)
+        //TODO: Make order/ranking same in both graphs
         const filteredData = sortedData.filter(row => row['CF (Workspace Progress Status)'] === filter);
         console.log(filteredData);
 
