@@ -37,16 +37,38 @@ export const loadAndSortData = (csvData: string): CSVRow[] => {
 };
 
 // Function to create step sequences
-export const createStepSequences = (sortedData: CSVRow[]): { [key: string]: string[] } => {
+// export const createStepSequences = (sortedData: CSVRow[]): { [key: string]: string[] } => {
+//     return sortedData.reduce((acc, row) => {
+//         const sessionId = row['Session Id'];
+//         if (!acc[sessionId]) {
+//             acc[sessionId] = [];
+//         }
+//         const stepName = row['Step Name'];
+//         if (!acc[sessionId].includes(stepName)) {
+//             acc[sessionId].push(stepName);
+//         }
+//         return acc;
+//     }, {} as { [key: string]: string[] });
+// };
+export const createStepSequences = (sortedData: CSVRow[], selfLoops:boolean): { [key: string]: string[] } => {
     return sortedData.reduce((acc, row) => {
         const sessionId = row['Session Id'];
         if (!acc[sessionId]) {
             acc[sessionId] = [];
         }
         const stepName = row['Step Name'];
-        if (!acc[sessionId].includes(stepName)) {
+
+        if (!selfLoops) {
+            if (!acc[sessionId].includes(stepName)) {
+            acc[sessionId].push(stepName);
+            }
+        } else {
             acc[sessionId].push(stepName);
         }
+
+        // Allow self-loops
+
+
         return acc;
     }, {} as { [key: string]: string[] });
 };
@@ -108,15 +130,6 @@ export const countEdges = (
     return { edgeCounts, totalNodeEdges, ratioEdges, edgeOutcomeCounts };
 };
 
-
-/**
- * Normalize edge thicknesses with a threshold.
- * @param ratioEdges - A dictionary where keys are edge identifiers and values are their ratios.
- * @param maxThickness - The maximum thickness to scale the normalized thicknesses.
- * @param threshold - The minimum ratio value to consider for normalization.
- * @param minThickness - The minimum thickness value to use if ratios are below the threshold.
- * @returns - A dictionary where keys are edge identifiers and values are the normalized thicknesses.
- */
 export function normalizeThicknesses(
     ratioEdges: { [key: string]: number },
     maxThickness: number
@@ -201,7 +214,7 @@ export function generateDotString(
     for (let rank = 0; rank < totalSteps; rank++) {
         const step = mostCommonSequence[rank];
         const color = calculateColor(rank + 1, totalSteps);
-        const node_tooltip = `Rank\n\t\t ${rank + 1}\nColor\n\t\t ${color}`;
+        const node_tooltip = `Rank:\n\t\t ${rank + 1}\nColor:\n\t\t ${color}`;
 
         dotString += `    "${step}" [rank=${rank + 1}, style=filled, fillcolor="${color}", tooltip="${node_tooltip}"];\n`;
     }

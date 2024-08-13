@@ -4,7 +4,8 @@ import DropZone from './DropZone_new';
 import { loadAndSortData, createStepSequences, createOutcomeSequences, countEdges, normalizeThicknesses, generateDotString } from './graphvizProcessing';
 import Graphviz from 'graphviz-react';
 import ErrorBoundary from "./components/errorBoundary.tsx";
-import FilterComponent from './FilterComponent';
+import FilterComponent from './components/FilterComponent.tsx';
+import SelfLoopSwitch from "./components/selfLoopSwitch.tsx";
 
 const App: React.FC = () => {
     const [dotString, setDotString] = useState<string>('');
@@ -12,16 +13,27 @@ const App: React.FC = () => {
 
     const [filter, setFilter] = useState<string>(''); // State for the selected filter
     const [csvData, setCsvData] = useState<string>(''); // State to store raw CSV data
+    const [selfLoops, setSelfLoops]= useState<boolean>(true)
 
-    // Process the CSV data initially and when filter changes
+const handleToggle = () => {
+    setSelfLoops(!selfLoops);
+  };
 
+  useEffect(() => {
+    const value = selfLoops ? true : false;
+    setSelfLoops(value);
+    console.log(selfLoops)
+  }, [selfLoops]);
+
+
+// Process the CSV data initially and when filter changes
 useEffect(() => {
     if (!csvData) return; // Skip if no CSV data is available
 
     const sortedData = loadAndSortData(csvData);
 
     // Generate the unfiltered graph
-    const stepSequences = createStepSequences(sortedData);
+    const stepSequences = createStepSequences(sortedData, selfLoops);
     const outcomeSequences = createOutcomeSequences(sortedData);
 
     const { edgeCounts, totalNodeEdges, ratioEdges, edgeOutcomeCounts } = countEdges(stepSequences, outcomeSequences);
@@ -51,7 +63,7 @@ useEffect(() => {
         const filteredData = sortedData.filter(row => row['CF (Workspace Progress Status)'] === filter);
         console.log(filteredData);
 
-        const filteredStepSequences = createStepSequences(filteredData);
+        const filteredStepSequences = createStepSequences(filteredData, selfLoops);
         const filteredOutcomeSequences = createOutcomeSequences(filteredData);
 
         const { edgeCounts: filteredEdgeCounts, totalNodeEdges: filteredTotalNodeEdges,
@@ -79,7 +91,7 @@ useEffect(() => {
         setFilteredDotString(null); // Clear filtered graph if no filter is set
     }
 
-}, [csvData, filter]); // Reprocess data when either csvData or filter changes
+}, [csvData, filter, selfLoops]); // Reprocess data when either csvData or filter changes
 
     const handleDataProcessed = (uploadedCsvData: string) => {
         setCsvData(uploadedCsvData); // Store the raw CSV data
@@ -88,8 +100,9 @@ useEffect(() => {
     return (
         <div>
             <h1>Path Analysis Tool (playground)</h1>
-            <FilterComponent onFilterChange={setFilter} />
             <DropZone onDataProcessed={handleDataProcessed}/>
+            <FilterComponent onFilterChange={setFilter} />
+            <SelfLoopSwitch isOn={selfLoops} handleToggle={handleToggle}></SelfLoopSwitch>
             <ErrorBoundary>
                 <div className={"container"}>
 
