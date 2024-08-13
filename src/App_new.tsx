@@ -8,7 +8,7 @@ import FilterComponent from './FilterComponent';
 
 const App: React.FC = () => {
     const [dotString, setDotString] = useState<string>('');
-    const [filteredDotString, setFilteredDotString] = useState<string>('');
+    const [filteredDotString, setFilteredDotString] = useState<string|null>('');
 
     const [filter, setFilter] = useState<string>(''); // State for the selected filter
     const [csvData, setCsvData] = useState<string>(''); // State to store raw CSV data
@@ -37,7 +37,8 @@ useEffect(() => {
         ratioEdges,
         edgeOutcomeCounts,
         edgeCounts,
-        totalNodeEdges, 1
+        totalNodeEdges,
+        1
     );
 
     setDotString(dotStr);
@@ -69,7 +70,8 @@ useEffect(() => {
             filteredRatioEdges,
             filteredEdgeOutcomeCounts,
             filteredEdgeCounts,
-            filteredTotalNodeEdges, 1
+            filteredTotalNodeEdges,
+            1
         );
 
         setFilteredDotString(filteredDotStr);
@@ -85,13 +87,14 @@ useEffect(() => {
 
     return (
         <div>
-            <h1>CSV Sequence Processor with Graphviz</h1>
+            <h1>Path Analysis Tool (playground)</h1>
             <FilterComponent onFilterChange={setFilter} />
             <DropZone onDataProcessed={handleDataProcessed}/>
             <ErrorBoundary>
                 <div className={"container"}>
+
                     {dotString && <Graphviz dot={dotString} options={{useWorker: false, height: 600, width: 600}}/>}
-                    <h2>{filter}</h2>
+                    <label>{filter}</label>
                     {filteredDotString &&
                         <Graphviz dot={filteredDotString} options={{useWorker: false, height: 600, width: 600}}/>}
                 </div>
